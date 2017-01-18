@@ -1,0 +1,8 @@
+name: SkyStore
+version: ${project.version}
+main: net.apthos.skystore.SkyStore
+
+commands:
+  shop:
+    description: used for shop management
+    usage: /shop
