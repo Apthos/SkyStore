@@ -49,6 +49,10 @@ public final class SkyStore extends JavaPlugin {
         this.Shops.add(shop);
     }
 
+    public void removeShop(Shop shop){
+        this.Shops.remove(shop);
+    }
+
     public Shop getShop(Location location) {
         for (Shop shop : this.Shops) {
             if (shop.getFrame().getLocation().getBlock().getLocation().equals(location

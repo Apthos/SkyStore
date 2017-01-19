@@ -20,9 +20,10 @@ import java.util.List;
 public class Shop {
 
     private Location location;
-    private double price;
+    private double sell, buy;
     private ItemFrame frame = null;
     private ItemStack item;
+    boolean buying, selling;
 
     public Shop(Location location) {
         File file = Utils.getFileLocation(location);
@@ -41,7 +42,10 @@ public class Shop {
         }
 
         YamlConfiguration conf = YamlConfiguration.loadConfiguration(file);
-        price = conf.getDouble("price");
+        sell = conf.getDouble("sell_price");
+        buy = conf.getDouble("buy_price");
+        if (sell == -1){ selling = false; }
+        if (buy == -1){ buying = false; }
         item = getItemFromSerial(conf.getString("item"));
 
         if (frame == null) {
@@ -49,13 +53,17 @@ public class Shop {
         }
     }
 
-    public Shop(ItemFrame frame, Double price) {
+    public Shop(ItemFrame frame, Double buy, Double sell) {
         location = frame.getLocation();
-        this.price = price;
+        this.sell = sell;
+        this.buy = buy;
         this.frame = frame;
+        this.item = frame.getItem();
+        if (sell == -1){ selling = false; } else selling = true;
+        if (buy == -1){ buying = false; } else buying = true;
         saveFrameFile();
         ItemMeta meta = frame.getItem().getItemMeta();
-        meta.setDisplayName(ChatColor.GREEN + "Price: " + ChatColor.RED + "$" + this.price);
+        meta.setDisplayName(getTitle());
         ItemStack item = frame.getItem();
         item.setItemMeta(meta);
         frame.setItem(item);
@@ -65,13 +73,14 @@ public class Shop {
         ItemFrame frame = (ItemFrame) location.getWorld().spawnEntity(location, EntityType
                 .ITEM_FRAME);
         frame.setItem(item);
-        frame.setCustomName("Price: " + this.price + "$");
+        frame.setCustomName(getTitle());
     }
 
     public void destroy(){
         frame.remove();
         File file = Utils.getFileLocation(location);
         file.delete();
+        SkyStore.getInstance().removeShop(this);
     }
 
     // MATERIAL:DURABILITY:DISPLAY_NAME:LORE:ENCHANTS
@@ -147,7 +156,10 @@ public class Shop {
         YamlConfiguration conf = new YamlConfiguration();
         conf.createSection("location");
         conf.set("location", Utils.getStringLocation(location));
-        conf.createSection("price"); conf.set("price", price);
+        conf.createSection("selling"); conf.set("selling", selling);
+        conf.createSection("buying"); conf.set("buying", buying);
+        conf.createSection("sell_price"); conf.set("sell_price", sell);
+        conf.createSection("buy_price"); conf.set("buy_price", buy);
         conf.createSection("item"); conf.set("item", serializeItemStack(frame.getItem()));
 
         try {
@@ -157,8 +169,24 @@ public class Shop {
         }
     }
 
-    public double getPrice() {
-        return price;
+    private String getTitle(){
+        if (selling && buying){
+            return (ChatColor.GREEN + "B: " + ChatColor.RED + "$" + buy + ChatColor.GREEN
+            + " S: " + ChatColor.RED + "$" + sell);
+        } else if (selling) {
+            return (ChatColor.GREEN + "Sell: " + ChatColor.RED + "$" + sell);
+        } else if (buying){
+            return (ChatColor.GREEN + "Buy: " + ChatColor.RED + "$" + buy);
+        }
+        return null;
+    }
+
+    public double getSellPrice() {
+        return sell;
+    }
+
+    public double getBuyPrice(){
+        return buy;
     }
 
     public ItemFrame getFrame() {
