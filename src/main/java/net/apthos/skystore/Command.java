@@ -5,10 +5,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_11_R1.NBTTagCompound;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_11_R1.inventory.CraftItemStack;
@@ -17,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import javax.xml.soap.Text;
+import java.io.File;
 
 public class Command implements CommandExecutor {
     @Override
@@ -33,6 +31,7 @@ public class Command implements CommandExecutor {
                     "   &6&lCreate \n" +
                     "   &6&lRemove \n" +
                     "   &6&lEdit \n" +
+                    "   &6&lRestore \n" +
                     "&c<==== &aShop Commands &c=============>"
             ));
             return true;
@@ -129,6 +128,29 @@ public class Command implements CommandExecutor {
             return true;
         }
 
+        if (strings[0].equalsIgnoreCase("restore") && sender.hasPermission("SkyStore" +
+                ".Restore")) {
+            if (strings.length == 1) {
+                sender.sendMessage(ChatColor.RED + "Usage: /shop restore [world]");
+                return true;
+            }
+            if (Bukkit.getWorld(strings[1]) == null) {
+                sender.sendMessage(ChatColor.RED + "Error: \"" + ChatColor.GREEN
+                        + strings[1] + ChatColor.RED + "\" isn't a valid world!");
+                return true;
+            }
+            int restored = restoreShops(strings[1]);
+
+            if (restored == - 1) {
+                sender.sendMessage(ChatColor.RED + "Error: data folder could not be found!");
+                return true;
+            }
+
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "" +
+                    "&a&lSkyStore&a: &c" + restored + "&a shops have been restored!"));
+            return true;
+        }
+
         return true;
     }
 
@@ -139,5 +161,23 @@ public class Command implements CommandExecutor {
         compound = nmsItemStack.save(compound);
 
         return compound.toString();
+    }
+
+    public int restoreShops(String world) {
+        File worldFolder = new File(SkyStore.getInstance().getDataFolder() + "/Worlds/"
+                + world);
+        if (! worldFolder.exists()) return - 1;
+        int restored = 0;
+        for (File file : worldFolder.listFiles()) {
+            if (! file.getName().endsWith(".yml")) continue;
+            String Location = file.getName().replace(".yml", "").replace("{", "")
+                    .replace("}", "");
+            int x = Integer.parseInt(Location.split(",")[0]),
+                    y = Integer.parseInt(Location.split(",")[1]),
+                    z = Integer.parseInt(Location.split(",")[2]);
+            Shop shop = new Shop(new Location(Bukkit.getWorld(world), x, y, z));
+            restored++;
+        }
+        return restored;
     }
 }

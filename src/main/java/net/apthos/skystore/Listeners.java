@@ -26,6 +26,7 @@ public class Listeners implements Listener {
         Shop shop = SkyStore.getInstance().getShop(Frame.getLocation().getBlock()
                 .getLocation());
         if (shop == null) { return; } else e.setCancelled(true);
+        if (!shop.selling) return;
         if (e.getPlayer().getItemInHand() == null) return;
         if (! shop.getItem().isSimilar(e.getPlayer().getItemInHand())) {
             e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "" +
@@ -67,7 +68,7 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void itemFrameItemRemoval(EntityDamageByEntityEvent e) {
+    public void EntityDamageEvent(EntityDamageByEntityEvent e) {
         if (! (e.getEntity() instanceof ItemFrame)) { return; }
         if (! (e.getDamager() instanceof Player)) { return; }
 
@@ -82,6 +83,7 @@ public class Listeners implements Listener {
         Shop shop = SkyStore.getInstance().getShop(Frame.getLocation().getBlock()
                 .getLocation());
         if (shop == null) { return; }
+        if (!shop.buying) return;
         e.setCancelled(true);
 
         int amount = 1;

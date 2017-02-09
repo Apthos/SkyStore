@@ -44,8 +44,8 @@ public class Shop {
         YamlConfiguration conf = YamlConfiguration.loadConfiguration(file);
         sell = conf.getDouble("sell_price");
         buy = conf.getDouble("buy_price");
-        if (sell == -1){ selling = false; }
-        if (buy == -1){ buying = false; }
+        if (sell == -1){ selling = false; } else selling = true;
+        if (buy == -1){ buying = false; } else buying = true;
         item = getItemFromSerial(conf.getString("item"));
 
         if (frame == null) {
@@ -72,8 +72,11 @@ public class Shop {
     public void recreate() {
         ItemFrame frame = (ItemFrame) location.getWorld().spawnEntity(location, EntityType
                 .ITEM_FRAME);
-        frame.setItem(item);
-        frame.setCustomName(getTitle());
+        ItemStack stack = item.clone();
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(getTitle());
+        stack.setItemMeta(meta);
+        frame.setItem(stack);
     }
 
     public void destroy(){
